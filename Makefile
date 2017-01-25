@@ -48,7 +48,7 @@ validate: build  ## validate gofmt, golint and go vet
 	$(DOCKER_RUN_TRAEFIK) ./script/make.sh  validate-gofmt validate-govet validate-golint validate-misspell
 
 build: dist
-	docker build $(DOCKER_BUILD_ARGS) -t "$(TRAEFIK_DEV_IMAGE)" -f build.Dockerfile .
+	docker build -t "$(TRAEFIK_DEV_IMAGE)" -f build.Dockerfile .
 
 build-webui:
 	docker build -t traefik-webui -f webui/Dockerfile webui
@@ -57,10 +57,13 @@ build-no-cache: dist
 	docker build --no-cache -t "$(TRAEFIK_DEV_IMAGE)" -f build.Dockerfile .
 
 shell: build ## start a shell inside the build env
-	$(DOCKER_RUN_TRAEFIK) /bin/bash
 
-image: build ## build a docker traefik image 
-	docker build -t $(TRAEFIK_IMAGE) .
+base-images:
+	docker build -t containous/traefik-webui-base-image -f webui/webui.base.Dockerfile webui
+	docker build $(DOCKER_BUILD_ARGS) -t containous/traefik-base-image -f base.Dockerfile .
+	
+deploy-docker-base:
+	script/deploy-docker-base.sh
 
 dist:
 	mkdir dist
